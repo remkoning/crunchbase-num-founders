@@ -53,6 +53,11 @@ gen acquired = (status == "acquired")
 gen raised_funding = (funding_rounds > 0)
 gen closed = (status == "closed")
 
+gen employees = .
+replace employees = 0 if employee_count == "1-10"
+replace employees = 1 if employee_count != "-" & employees != 0
+
+
 label var solo_founder "Sole Founder?"
 
 label var ipo "IPO?"
@@ -62,12 +67,14 @@ label var raised_funding "Raised Funding?"
 // Check other DVs based on Ethan's twitter comment 
 // https://twitter.com/emollick/status/956574711877722112
 label var closed "Shut Down?"
+label var employees "11+ Employees?"
 
 eststo clear
 eststo: reg raised_funding solo_founder, robust
 eststo: reg acquired solo_founder, robust
 eststo: reg ipo solo_founder, robust
 eststo: reg closed solo_founder, robust
+eststo: reg employees solo_founder, robust
 
 tab solo_founder
 esttab, label noabbrev
