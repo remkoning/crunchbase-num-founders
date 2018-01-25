@@ -1,7 +1,6 @@
-
 // Data from https://data.crunchbase.com/docs/daily-csv-export
 
-import delimited "crunchbase/2017-01/csv_export/jobs.csv", varnames(1) encoding(ISO-8859-1)clear
+import delimited "/Users/rkoning/Dropbox/Research/crunchbase/2017-01/csv_export/jobs.csv", varnames(1) encoding(ISO-8859-1)clear
 
 // Make a role as a founder if "founder" is in the title
 gen lower_title = lower(title)
@@ -26,16 +25,16 @@ replace founder = 5 if founder > 5
 
 // save out file to merge on to some other stuff
 sort org_uuid
-save "number_founders.dta", replace
+save "~/Downloads/number_founders.dta", replace
 
 // Load in the startup data
-import delimited "crunchbase/2017-01/csv_export/organizations.csv", varnames(1) encoding(ISO-8859-1)clear
+import delimited "/Users/rkoning/Dropbox/Research/crunchbase/2017-01/csv_export/organizations.csv", varnames(1) encoding(ISO-8859-1)clear
 
 // Okay merge on the number of founders data
 rename uuid org_uuid
 sort org_uuid
 drop if mi(org_uuid)
-merge 1:1 org_uuid using "number_founders.dta"
+merge 1:1 org_uuid using "~/Downloads/number_founders.dta"
 
 // Some don't match, not data on number of founders?
 keep if _m == 3
@@ -52,6 +51,7 @@ gen solo_founder = (founder == 1)
 gen ipo = (status == "ipo")
 gen acquired = (status == "acquired")
 gen raised_funding = (funding_rounds > 0)
+gen closed = (status == "closed")
 
 label var solo_founder "Sole Founder?"
 
@@ -59,11 +59,22 @@ label var ipo "IPO?"
 label var acquired "Acquired?"
 label var raised_funding "Raised Funding?"
 
+// Check other DVs based on Ethan's twitter comment 
+// https://twitter.com/emollick/status/956574711877722112
+label var closed "Shut Down?"
+
 eststo clear
 eststo: reg raised_funding solo_founder, robust
 eststo: reg acquired solo_founder, robust
 eststo: reg ipo solo_founder, robust
+eststo: reg closed solo_founder, robust
 
 tab solo_founder
 esttab, label noabbrev
+
+
+
+
+
+
 
